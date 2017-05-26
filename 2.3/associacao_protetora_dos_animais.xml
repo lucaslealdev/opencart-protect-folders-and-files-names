@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<modification>
+  <name>Protege os nomes de pastas e arquivos</name>
+  <code>protect-folders-and-files-names</code>
+  <version>1.0</version>
+  <author>Lucas Leal</author>
+  <link>http://www.facebook.com/pagina404</link>
+  <file path="admin/controller/common/filemanager.php">
+    <operation>
+      <search>
+        <![CDATA[public function index() {]]>
+      </search>
+      <add position="before">
+        <![CDATA[
+           public function slugify($text,$delimiter = '-'){
+            setlocale(LC_ALL, 'en_US.UTF8');
+            $text = preg_replace('~[^\pL\d]+~u', $delimiter, $text);
+            $text = iconv('utf-8', 'us-ascii//TRANSLIT', $text);
+            $text = preg_replace('~[^-\w]+~', '', $text);
+            $text = trim($text, '-');
+            $text = preg_replace('~'.$delimiter.'+~', $delimiter, $text);
+            $text = strtolower($text);
+            if (empty($text)) {
+              return uniqid();
+            }
+            return $text;
+          }
+        ]]>
+      </add>
+    </operation>
+    <operation>
+      <search>
+        <![CDATA[if ($this->request->server['REQUEST_METHOD'] == 'POST') {]]>
+      </search>
+      <add position="after">
+        <![CDATA[
+          $this->request->post['folder'] = $this->slugify($this->request->post['folder']);
+        ]]>
+      </add>
+    </operation>
+    <operation>
+      <search>
+        <![CDATA[$filename = basename(html_entity_decode($file['name'], ENT_QUOTES, 'UTF-8'));]]>
+      </search>
+      <add position="before">
+        <![CDATA[
+          $withoutextension = pathinfo($file['name'], PATHINFO_FILENAME);
+          $onlyextension = pathinfo($file['name'], PATHINFO_EXTENSION);
+
+          $file['name'] = $this->slugify($withoutextension).".".$onlyextension;
+        ]]>
+      </add>
+    </operation>
+  </file>
+</modification>
